@@ -1,0 +1,19 @@
+
+> propertypilot-backend@1.0.0 dev
+> tsx watch src/index.ts
+
+Failed to start server: PrismaClientInitializationError: 
+Invalid `prisma.$executeRaw()` invocation:
+
+
+Can't reach database server at `localhost:5432`
+
+Please make sure your database server is running at `localhost:5432`.
+    at $n.handleRequestError (/Users/sh7286/Desktop/propertypilot-backend/node_modules/@prisma/client/runtime/library.js:121:7615)
+    at $n.handleAndLogRequestError (/Users/sh7286/Desktop/propertypilot-backend/node_modules/@prisma/client/runtime/library.js:121:6623)
+    at $n.request (/Users/sh7286/Desktop/propertypilot-backend/node_modules/@prisma/client/runtime/library.js:121:6307)
+    at async l (/Users/sh7286/Desktop/propertypilot-backend/node_modules/@prisma/client/runtime/library.js:130:9633)
+    at async start (/Users/sh7286/Desktop/propertypilot-backend/src/index.ts:8:5) {
+  clientVersion: '5.22.0',
+  errorCode: undefined
+}

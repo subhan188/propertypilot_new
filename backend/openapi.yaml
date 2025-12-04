@@ -1,0 +1,2190 @@
+openapi: 3.0.0
+info:
+  title: PropertyPilot Backend API
+  description: Real estate investment analysis platform with financial calculations, property management, and reporting.
+  version: 1.0.0
+  contact:
+    name: PropertyPilot Support
+    email: support@propertypilot.com
+  license:
+    name: MIT
+servers:
+  - url: https://api.propertypilot.com
+    description: Production server
+  - url: http://localhost:3001
+    description: Development server
+tags:
+  - name: Authentication
+    description: User authentication and session management
+  - name: Properties
+    description: Property management endpoints
+  - name: Scenarios
+    description: Deal scenario analysis
+  - name: Renovations
+    description: Renovation tracking
+  - name: Alerts
+    description: Smart alerts and notifications
+  - name: Dashboard
+    description: Portfolio dashboard and analytics
+  - name: Uploads
+    description: File upload and management
+  - name: Reports
+    description: Report generation and export
+  - name: Integrations
+    description: Third-party service integrations
+  - name: User
+    description: User profile and settings
+
+paths:
+  /health:
+    get:
+      tags:
+        - Health
+      summary: Health check
+      description: Check if the API is running and healthy
+      responses:
+        '200':
+          description: Server is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  timestamp:
+                    type: string
+                    format: date-time
+
+  /api/auth/register:
+    post:
+      tags:
+        - Authentication
+      summary: Register a new user
+      description: Create a new user account with email and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      user:
+                        $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+
+  /api/auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: Login user
+      description: Authenticate user with email and password, returns session cookie
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+                example: sessionId=abc123; HttpOnly; Secure; SameSite=Strict
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      user:
+                        $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /api/auth/logout:
+    post:
+      tags:
+        - Authentication
+      summary: Logout user
+      description: Destroy the current session
+      security:
+        - SessionAuth: []
+      responses:
+        '200':
+          description: Logout successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: Logged out successfully
+
+  /api/auth/me:
+    get:
+      tags:
+        - Authentication
+      summary: Get current user
+      description: Returns the authenticated user profile
+      security:
+        - SessionAuth: []
+      responses:
+        '200':
+          description: User found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      user:
+                        $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /api/auth/password:
+    put:
+      tags:
+        - Authentication
+      summary: Change password
+      description: Update the current user's password
+      security:
+        - SessionAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                currentPassword:
+                  type: string
+                  minLength: 1
+                newPassword:
+                  type: string
+                  minLength: 8
+              required:
+                - currentPassword
+                - newPassword
+      responses:
+        '200':
+          description: Password changed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: Password changed successfully
+
+  /api/properties:
+    get:
+      tags:
+        - Properties
+      summary: List all properties
+      description: Get all properties for the authenticated user with filtering and pagination
+      security:
+        - SessionAuth: []
+      parameters:
+        - name: type
+          in: query
+          description: Filter by property type
+          schema:
+            type: string
+            enum: [rent, flip, airbnb]
+        - name: status
+          in: query
+          description: Filter by status
+          schema:
+            type: string
+            enum: [lead, analyzing, offer, under_contract, owned, sold]
+        - name: city
+          in: query
+          description: Filter by city (partial match)
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+      responses:
+        '200':
+          description: List of properties
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Property'
+                  total:
+                    type: integer
+                  page:
+                    type: integer
+                  pageSize:
+                    type: integer
+                  hasMore:
+                    type: boolean
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+    post:
+      tags:
+        - Properties
+      summary: Create property
+      description: Create a new property
+      security:
+        - SessionAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PropertyRequest'
+      responses:
+        '201':
+          description: Property created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      property:
+                        $ref: '#/components/schemas/Property'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+
+  /api/properties/{propertyId}:
+    get:
+      tags:
+        - Properties
+      summary: Get property detail
+      description: Get detailed information about a specific property
+      security:
+        - SessionAuth: []
+      parameters:
+        - name: propertyId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Property found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      property:
+                        $ref: '#/components/schemas/Property'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+    put:
+      tags:
+        - Properties
+      summary: Update property
+      description: Update property details
+      security:
+        - SessionAuth: []
+      parameters:
+        - name: propertyId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PropertyUpdateRequest'
+      responses:
+        '200':
+          description: Property updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      property:
+                        $ref: '#/components/schemas/Property'
+
+    delete:
+      tags:
+        - Properties
+      summary: Delete property
+      description: Delete a property (soft delete)
+      security:
+        - SessionAuth: []
+      parameters:
+        - name: propertyId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Property deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: Property deleted successfully
+
+  /api/properties/{propertyId}/comps:
+    get:
+      tags:
+        - Properties
+      summary: Get comparable sales
+      description: Get comparable sales for a property
+      security:
+        - SessionAuth: []
+      parameters:
+        - name: propertyId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: Comparable sales found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      property:
+                        $ref: '#/components/schemas/Property'
+                      comps:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Comp'
+
+  /api/properties/{propertyId}/scenarios:
+    post:
+      tags:
+        - Scenarios
+      summary: Create scenario
+      description: Create a deal scenario for a property
+      security:
+        - SessionAuth: []
+      parameters:
+        - name: propertyId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DealScenarioRequest'
+      responses:
+        '201':
+          description: Scenario created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      scenario:
+                        $ref: '#/components/schemas/DealScenario'
+
+  /api/scenarios/{scenarioId}:
+    put:
+      tags:
+        - Scenarios
+      summary: Update scenario
+      description: Update a deal scenario
+      security:
+        - SessionAuth: []
+      parameters:
+        - name: scenarioId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DealScenarioRequest'
+      responses:
+        '200':
+          description: Scenario updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      scenario:
+                        $ref: '#/components/schemas/DealScenario'
+
+    delete:
+      tags:
+        - Scenarios
+      summary: Delete scenario
+      description: Delete a deal scenario
+      security:
+        - SessionAuth: []
+      parameters:
+        - name: scenarioId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Scenario deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: Scenario deleted successfully
+
+  /api/scenarios/{scenarioId}/analyze:
+    post:
+      tags:
+        - Scenarios
+      summary: Analyze scenario
+      description: Calculate financial metrics for a scenario
+      security:
+        - SessionAuth: []
+      parameters:
+        - name: scenarioId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Analysis complete
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      scenario:
+                        $ref: '#/components/schemas/DealScenarioAnalyzed'
+
+  /api/properties/{propertyId}/renovations:
+    post:
+      tags:
+        - Renovations
+      summary: Create renovation item
+      description: Add a renovation item to a property
+      security:
+        - SessionAuth: []
+      parameters:
+        - name: propertyId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RenovationItemRequest'
+      responses:
+        '201':
+          description: Renovation created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      renovation:
+                        $ref: '#/components/schemas/RenovationItem'
+
+  /api/renovations/{renovationId}:
+    put:
+      tags:
+        - Renovations
+      summary: Update renovation item
+      description: Update a renovation item
+      security:
+        - SessionAuth: []
+      parameters:
+        - name: renovationId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RenovationItemRequest'
+      responses:
+        '200':
+          description: Renovation updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      renovation:
+                        $ref: '#/components/schemas/RenovationItem'
+
+    delete:
+      tags:
+        - Renovations
+      summary: Delete renovation item
+      description: Delete a renovation item
+      security:
+        - SessionAuth: []
+      parameters:
+        - name: renovationId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Renovation deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: Renovation deleted successfully
+
+  /api/alerts:
+    get:
+      tags:
+        - Alerts
+      summary: List alerts
+      description: Get all alerts for the authenticated user
+      security:
+        - SessionAuth: []
+      parameters:
+        - name: read
+          in: query
+          description: Filter by read status
+          schema:
+            type: boolean
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+      responses:
+        '200':
+          description: List of alerts
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Alert'
+
+  /api/alerts/{alertId}/read:
+    put:
+      tags:
+        - Alerts
+      summary: Mark alert as read
+      description: Mark an alert as read
+      security:
+        - SessionAuth: []
+      parameters:
+        - name: alertId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Alert marked as read
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      alert:
+                        $ref: '#/components/schemas/Alert'
+
+  /api/alerts/{alertId}:
+    delete:
+      tags:
+        - Alerts
+      summary: Delete alert
+      description: Delete an alert
+      security:
+        - SessionAuth: []
+      parameters:
+        - name: alertId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Alert deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: Alert deleted successfully
+
+  /api/dashboard/kpi:
+    get:
+      tags:
+        - Dashboard
+      summary: Get portfolio KPIs
+      description: Get key performance indicators for the user's portfolio
+      security:
+        - SessionAuth: []
+      responses:
+        '200':
+          description: KPI data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      kpi:
+                        $ref: '#/components/schemas/PortfolioKPI'
+
+  /api/dashboard/portfolio-trend:
+    get:
+      tags:
+        - Dashboard
+      summary: Get portfolio trend
+      description: Get historical portfolio trends
+      security:
+        - SessionAuth: []
+      parameters:
+        - name: months
+          in: query
+          schema:
+            type: integer
+            default: 12
+      responses:
+        '200':
+          description: Trend data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      trend:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/TrendPoint'
+
+  /api/dashboard/deal-flow:
+    get:
+      tags:
+        - Dashboard
+      summary: Get deal flow
+      description: Get deal pipeline statistics
+      security:
+        - SessionAuth: []
+      responses:
+        '200':
+          description: Deal flow data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      dealFlow:
+                        $ref: '#/components/schemas/DealFlow'
+
+  /api/upload:
+    post:
+      tags:
+        - Uploads
+      summary: Upload single file
+      description: Upload a single file to property or renovation
+      security:
+        - SessionAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: File to upload (max 50MB)
+                propertyId:
+                  type: string
+                  format: uuid
+                  description: Associated property ID (optional)
+                renovationId:
+                  type: string
+                  format: uuid
+                  description: Associated renovation ID (optional)
+              required:
+                - file
+      responses:
+        '201':
+          description: File uploaded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      file:
+                        $ref: '#/components/schemas/FileUpload'
+
+  /api/upload/batch:
+    post:
+      tags:
+        - Uploads
+      summary: Upload multiple files
+      description: Upload multiple files at once
+      security:
+        - SessionAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                files:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+                  description: Files to upload
+                propertyId:
+                  type: string
+                  format: uuid
+              required:
+                - files
+      responses:
+        '201':
+          description: Files uploaded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      files:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/FileUpload'
+                      count:
+                        type: integer
+
+  /api/uploads/{fileId}:
+    delete:
+      tags:
+        - Uploads
+      summary: Delete file
+      description: Delete an uploaded file
+      security:
+        - SessionAuth: []
+      parameters:
+        - name: fileId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: File deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: File deleted successfully
+
+  /api/reports/portfolio:
+    get:
+      tags:
+        - Reports
+      summary: Generate portfolio report
+      description: Generate a comprehensive portfolio report
+      security:
+        - SessionAuth: []
+      responses:
+        '200':
+          description: Report generated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      report:
+                        $ref: '#/components/schemas/PortfolioReport'
+
+  /api/reports/property/{propertyId}:
+    get:
+      tags:
+        - Reports
+      summary: Generate property report
+      description: Generate a detailed property report
+      security:
+        - SessionAuth: []
+      parameters:
+        - name: propertyId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Report generated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      report:
+                        $ref: '#/components/schemas/PropertyReport'
+
+  /api/reports/portfolio/export:
+    get:
+      tags:
+        - Reports
+      summary: Export portfolio report
+      description: Export portfolio report in JSON or CSV format
+      security:
+        - SessionAuth: []
+      parameters:
+        - name: format
+          in: query
+          schema:
+            type: string
+            enum: [json, csv]
+            default: json
+      responses:
+        '200':
+          description: Report exported
+          content:
+            application/json:
+              schema: {}
+            text/csv:
+              schema: {}
+
+  /api/reports/property/{propertyId}/export:
+    get:
+      tags:
+        - Reports
+      summary: Export property report
+      description: Export property report in JSON or CSV format
+      security:
+        - SessionAuth: []
+      parameters:
+        - name: propertyId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: format
+          in: query
+          schema:
+            type: string
+            enum: [json, csv]
+            default: json
+      responses:
+        '200':
+          description: Report exported
+          content:
+            application/json:
+              schema: {}
+            text/csv:
+              schema: {}
+
+  /api/integrations:
+    get:
+      tags:
+        - Integrations
+      summary: List integrations
+      description: Get all available integrations and their status
+      security:
+        - SessionAuth: []
+      responses:
+        '200':
+          description: List of integrations
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      integrations:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Integration'
+
+  /api/integrations/{service}/connect:
+    post:
+      tags:
+        - Integrations
+      summary: Connect integration
+      description: Connect to an external service
+      security:
+        - SessionAuth: []
+      parameters:
+        - name: service
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [zillow, airdna, mls]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                apiKey:
+                  type: string
+                apiSecret:
+                  type: string
+              required:
+                - apiKey
+      responses:
+        '201':
+          description: Integration connected
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      integration:
+                        $ref: '#/components/schemas/Integration'
+
+  /api/integrations/{service}/disconnect:
+    delete:
+      tags:
+        - Integrations
+      summary: Disconnect integration
+      description: Disconnect from an external service
+      security:
+        - SessionAuth: []
+      parameters:
+        - name: service
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [zillow, airdna, mls]
+      responses:
+        '200':
+          description: Integration disconnected
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: Integration disconnected successfully
+
+  /api/user/me:
+    get:
+      tags:
+        - User
+      summary: Get user profile
+      description: Get the current user's profile information
+      security:
+        - SessionAuth: []
+      responses:
+        '200':
+          description: User profile
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      user:
+                        $ref: '#/components/schemas/User'
+
+    put:
+      tags:
+        - User
+      summary: Update profile
+      description: Update user profile information
+      security:
+        - SessionAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  minLength: 1
+                avatar:
+                  type: string
+                  format: uri
+      responses:
+        '200':
+          description: Profile updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      user:
+                        $ref: '#/components/schemas/User'
+
+  /api/user/preferences:
+    get:
+      tags:
+        - User
+      summary: Get preferences
+      description: Get user preferences
+      security:
+        - SessionAuth: []
+      responses:
+        '200':
+          description: User preferences
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      preferences:
+                        $ref: '#/components/schemas/UserPreferences'
+
+    put:
+      tags:
+        - User
+      summary: Update preferences
+      description: Update user preferences
+      security:
+        - SessionAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserPreferences'
+      responses:
+        '200':
+          description: Preferences updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      preferences:
+                        $ref: '#/components/schemas/UserPreferences'
+
+  /api/user/export-data:
+    get:
+      tags:
+        - User
+      summary: Export user data
+      description: Export all user data (GDPR compliance)
+      security:
+        - SessionAuth: []
+      responses:
+        '200':
+          description: User data exported
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /api/user/delete-account:
+    post:
+      tags:
+        - User
+      summary: Delete account
+      description: Delete user account and all associated data (GDPR compliance, irreversible)
+      security:
+        - SessionAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                password:
+                  type: string
+                  description: User password for confirmation
+              required:
+                - password
+      responses:
+        '200':
+          description: Account deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: Account deleted successfully. All your data has been removed.
+
+components:
+  securitySchemes:
+    SessionAuth:
+      type: apiKey
+      in: cookie
+      name: sessionId
+      description: Session-based authentication via httpOnly cookie
+
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+        avatar:
+          type: string
+          format: uri
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    RegisterRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+        name:
+          type: string
+          minLength: 1
+      required:
+        - email
+        - password
+        - name
+
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+      required:
+        - email
+        - password
+
+    Property:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        address:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        zipCode:
+          type: string
+        type:
+          type: string
+          enum: [rent, flip, airbnb]
+        status:
+          type: string
+          enum: [lead, analyzing, offer, under_contract, owned, sold]
+        purchasePrice:
+          type: number
+          format: float
+        currentValue:
+          type: number
+          format: float
+        arv:
+          type: number
+          format: float
+        sqft:
+          type: number
+          format: float
+        bedrooms:
+          type: integer
+        bathrooms:
+          type: number
+          format: float
+        yearBuilt:
+          type: integer
+        lotSize:
+          type: number
+          format: float
+        latitude:
+          type: number
+          format: double
+        longitude:
+          type: number
+          format: double
+        notes:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    PropertyRequest:
+      type: object
+      properties:
+        address:
+          type: string
+          minLength: 1
+        city:
+          type: string
+          minLength: 1
+        state:
+          type: string
+          minLength: 2
+        zipCode:
+          type: string
+          minLength: 5
+        type:
+          type: string
+          enum: [rent, flip, airbnb]
+        status:
+          type: string
+          enum: [lead, analyzing, offer, under_contract, owned, sold]
+        purchasePrice:
+          type: number
+          format: float
+          minimum: 0
+          exclusiveMinimum: true
+        currentValue:
+          type: number
+          format: float
+          minimum: 0
+          exclusiveMinimum: true
+        arv:
+          type: number
+          format: float
+          minimum: 0
+          exclusiveMinimum: true
+        sqft:
+          type: number
+          format: float
+          minimum: 0
+          exclusiveMinimum: true
+        bedrooms:
+          type: integer
+          minimum: 1
+        bathrooms:
+          type: number
+          format: float
+          minimum: 1
+        yearBuilt:
+          type: integer
+        lotSize:
+          type: number
+          format: float
+          minimum: 0
+          exclusiveMinimum: true
+        latitude:
+          type: number
+          format: double
+        longitude:
+          type: number
+          format: double
+        notes:
+          type: string
+      required:
+        - address
+        - city
+        - state
+        - zipCode
+        - type
+        - status
+        - purchasePrice
+        - currentValue
+        - arv
+        - sqft
+        - bedrooms
+        - bathrooms
+        - yearBuilt
+        - lotSize
+        - latitude
+        - longitude
+
+    PropertyUpdateRequest:
+      type: object
+      properties:
+        address:
+          type: string
+          minLength: 1
+        city:
+          type: string
+          minLength: 1
+        state:
+          type: string
+          minLength: 2
+        zipCode:
+          type: string
+          minLength: 5
+        type:
+          type: string
+          enum: [rent, flip, airbnb]
+        status:
+          type: string
+          enum: [lead, analyzing, offer, under_contract, owned, sold]
+        purchasePrice:
+          type: number
+          format: float
+          minimum: 0
+          exclusiveMinimum: true
+        currentValue:
+          type: number
+          format: float
+          minimum: 0
+          exclusiveMinimum: true
+        arv:
+          type: number
+          format: float
+          minimum: 0
+          exclusiveMinimum: true
+        sqft:
+          type: number
+          format: float
+          minimum: 0
+          exclusiveMinimum: true
+        bedrooms:
+          type: integer
+          minimum: 1
+        bathrooms:
+          type: number
+          format: float
+          minimum: 1
+        yearBuilt:
+          type: integer
+        lotSize:
+          type: number
+          format: float
+          minimum: 0
+          exclusiveMinimum: true
+        latitude:
+          type: number
+          format: double
+        longitude:
+          type: number
+          format: double
+        notes:
+          type: string
+
+    DealScenario:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        propertyId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        purchasePrice:
+          type: number
+          format: float
+        rehabCost:
+          type: number
+          format: float
+        holdingCosts:
+          type: number
+          format: float
+        closingCosts:
+          type: number
+          format: float
+        interestRate:
+          type: number
+          format: float
+        holdTimeMonths:
+          type: integer
+        exitStrategy:
+          type: string
+          enum: [rent, airbnb, flip]
+        monthlyRent:
+          type: number
+          format: float
+          nullable: true
+        occupancyRate:
+          type: number
+          format: float
+          nullable: true
+        dailyRate:
+          type: number
+          format: float
+          nullable: true
+        averageOccupancy:
+          type: number
+          format: float
+          nullable: true
+        salePrice:
+          type: number
+          format: float
+          nullable: true
+        sellingCosts:
+          type: number
+          format: float
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    DealScenarioAnalyzed:
+      allOf:
+        - $ref: '#/components/schemas/DealScenario'
+        - type: object
+          properties:
+            capRate:
+              type: number
+              format: float
+            cashOnCash:
+              type: number
+              format: float
+            roi:
+              type: number
+              format: float
+            monthlyNOI:
+              type: number
+              format: float
+            totalProfit:
+              type: number
+              format: float
+            irr:
+              type: number
+              format: float
+            npv:
+              type: number
+              format: float
+
+    DealScenarioRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+        purchasePrice:
+          type: number
+          format: float
+          minimum: 0
+          exclusiveMinimum: true
+        rehabCost:
+          type: number
+          format: float
+          minimum: 0
+        holdingCosts:
+          type: number
+          format: float
+          minimum: 0
+        closingCosts:
+          type: number
+          format: float
+          minimum: 0
+        interestRate:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 100
+        holdTimeMonths:
+          type: integer
+          minimum: 1
+        exitStrategy:
+          type: string
+          enum: [rent, airbnb, flip]
+        monthlyRent:
+          type: number
+          format: float
+          minimum: 0
+          exclusiveMinimum: true
+        occupancyRate:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 100
+        dailyRate:
+          type: number
+          format: float
+          minimum: 0
+          exclusiveMinimum: true
+        averageOccupancy:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 100
+        salePrice:
+          type: number
+          format: float
+          minimum: 0
+          exclusiveMinimum: true
+        sellingCosts:
+          type: number
+          format: float
+          minimum: 0
+      required:
+        - name
+        - purchasePrice
+        - rehabCost
+        - holdingCosts
+        - closingCosts
+        - interestRate
+        - holdTimeMonths
+        - exitStrategy
+
+    RenovationItem:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        propertyId:
+          type: string
+          format: uuid
+        category:
+          type: string
+        description:
+          type: string
+        estimatedCost:
+          type: number
+          format: float
+        actualCost:
+          type: number
+          format: float
+          nullable: true
+        contractor:
+          type: string
+          nullable: true
+        startDate:
+          type: string
+          format: date-time
+          nullable: true
+        endDate:
+          type: string
+          format: date-time
+          nullable: true
+        status:
+          type: string
+          enum: [pending, in_progress, completed]
+        notes:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    RenovationItemRequest:
+      type: object
+      properties:
+        category:
+          type: string
+          minLength: 1
+        description:
+          type: string
+          minLength: 1
+        estimatedCost:
+          type: number
+          format: float
+          minimum: 0
+          exclusiveMinimum: true
+        actualCost:
+          type: number
+          format: float
+          minimum: 0
+          exclusiveMinimum: true
+        contractor:
+          type: string
+        startDate:
+          type: string
+          format: date-time
+        endDate:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [pending, in_progress, completed]
+        notes:
+          type: string
+      required:
+        - category
+        - description
+        - estimatedCost
+        - status
+
+    Alert:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        type:
+          type: string
+        title:
+          type: string
+        message:
+          type: string
+        propertyId:
+          type: string
+          format: uuid
+          nullable: true
+        read:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+
+    Comp:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        propertyId:
+          type: string
+          format: uuid
+        address:
+          type: string
+        salePrice:
+          type: number
+          format: float
+        pricePerSqft:
+          type: number
+          format: float
+        saleDate:
+          type: string
+          format: date
+        beds:
+          type: integer
+        baths:
+          type: number
+          format: float
+        sqft:
+          type: number
+          format: float
+        source:
+          type: string
+        externalId:
+          type: string
+
+    FileUpload:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        propertyId:
+          type: string
+          format: uuid
+          nullable: true
+        renovationId:
+          type: string
+          format: uuid
+          nullable: true
+        originalName:
+          type: string
+        mimeType:
+          type: string
+        size:
+          type: integer
+        s3Key:
+          type: string
+        signedUrl:
+          type: string
+          format: uri
+        signedUrlExpiresAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+
+    PortfolioKPI:
+      type: object
+      properties:
+        totalProperties:
+          type: integer
+        totalInvested:
+          type: number
+          format: float
+        totalValue:
+          type: number
+          format: float
+        averageCapRate:
+          type: number
+          format: float
+        totalMonthlyNOI:
+          type: number
+          format: float
+        underContract:
+          type: integer
+        activeDeals:
+          type: integer
+
+    TrendPoint:
+      type: object
+      properties:
+        month:
+          type: string
+          format: date
+        totalValue:
+          type: number
+          format: float
+        monthlyNOI:
+          type: number
+          format: float
+        propertyCount:
+          type: integer
+
+    DealFlow:
+      type: object
+      properties:
+        lead:
+          type: integer
+        analyzing:
+          type: integer
+        offer:
+          type: integer
+        under_contract:
+          type: integer
+        owned:
+          type: integer
+        sold:
+          type: integer
+
+    PortfolioReport:
+      type: object
+      properties:
+        generatedAt:
+          type: string
+          format: date-time
+        user:
+          $ref: '#/components/schemas/User'
+        summary:
+          $ref: '#/components/schemas/PortfolioKPI'
+        properties:
+          type: array
+          items:
+            $ref: '#/components/schemas/Property'
+
+    PropertyReport:
+      type: object
+      properties:
+        generatedAt:
+          type: string
+          format: date-time
+        property:
+          $ref: '#/components/schemas/Property'
+        scenarios:
+          type: array
+          items:
+            $ref: '#/components/schemas/DealScenarioAnalyzed'
+        renovations:
+          type: array
+          items:
+            $ref: '#/components/schemas/RenovationItem'
+        comps:
+          type: array
+          items:
+            $ref: '#/components/schemas/Comp'
+        files:
+          type: array
+          items:
+            $ref: '#/components/schemas/FileUpload'
+
+    Integration:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        service:
+          type: string
+        isActive:
+          type: boolean
+        lastSyncAt:
+          type: string
+          format: date-time
+          nullable: true
+        syncStatus:
+          type: string
+          nullable: true
+
+    UserPreferences:
+      type: object
+      properties:
+        currency:
+          type: string
+          default: USD
+        timezone:
+          type: string
+          default: America/New_York
+        propertyTypes:
+          type: array
+          items:
+            type: string
+            enum: [rent, flip, airbnb]
+          default: [rent, flip, airbnb]
+        propertyStatuses:
+          type: array
+          items:
+            type: string
+          default: [lead, analyzing, offer, under_contract, owned]
+
+  responses:
+    ValidationError:
+      description: Validation error
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              success:
+                type: boolean
+                example: false
+              error:
+                type: string
+                example: Validation failed
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    path:
+                      type: array
+                      items:
+                        type: string
+                    message:
+                      type: string
+              requestId:
+                type: string
+
+    UnauthorizedError:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              success:
+                type: boolean
+                example: false
+              error:
+                type: string
+                example: Unauthorized
+              requestId:
+                type: string
+
+    NotFoundError:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              success:
+                type: boolean
+                example: false
+              error:
+                type: string
+                example: Resource not found
+              requestId:
+                type: string

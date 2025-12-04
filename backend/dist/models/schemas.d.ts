@@ -1,0 +1,321 @@
+import { z } from 'zod';
+export declare const RegisterSchema: z.ZodObject<{
+    email: z.ZodString;
+    password: z.ZodString;
+    name: z.ZodString;
+}, "strip", z.ZodTypeAny, {
+    email: string;
+    password: string;
+    name: string;
+}, {
+    email: string;
+    password: string;
+    name: string;
+}>;
+export declare const LoginSchema: z.ZodObject<{
+    email: z.ZodString;
+    password: z.ZodString;
+}, "strip", z.ZodTypeAny, {
+    email: string;
+    password: string;
+}, {
+    email: string;
+    password: string;
+}>;
+export declare const ChangePasswordSchema: z.ZodObject<{
+    currentPassword: z.ZodString;
+    newPassword: z.ZodString;
+}, "strip", z.ZodTypeAny, {
+    currentPassword: string;
+    newPassword: string;
+}, {
+    currentPassword: string;
+    newPassword: string;
+}>;
+export declare const PropertySchema: z.ZodObject<{
+    address: z.ZodString;
+    city: z.ZodString;
+    state: z.ZodString;
+    zipCode: z.ZodString;
+    type: z.ZodEnum<["rent", "airbnb", "flip"]>;
+    status: z.ZodEnum<["lead", "analyzing", "offer", "under_contract", "owned", "sold"]>;
+    purchasePrice: z.ZodNumber;
+    currentValue: z.ZodNumber;
+    arv: z.ZodNumber;
+    sqft: z.ZodNumber;
+    bedrooms: z.ZodNumber;
+    bathrooms: z.ZodNumber;
+    yearBuilt: z.ZodNumber;
+    lotSize: z.ZodNumber;
+    latitude: z.ZodNumber;
+    longitude: z.ZodNumber;
+    notes: z.ZodOptional<z.ZodString>;
+}, "strip", z.ZodTypeAny, {
+    type: "rent" | "airbnb" | "flip";
+    status: "lead" | "analyzing" | "offer" | "under_contract" | "owned" | "sold";
+    address: string;
+    city: string;
+    state: string;
+    zipCode: string;
+    purchasePrice: number;
+    currentValue: number;
+    arv: number;
+    sqft: number;
+    bedrooms: number;
+    bathrooms: number;
+    yearBuilt: number;
+    lotSize: number;
+    latitude: number;
+    longitude: number;
+    notes?: string | undefined;
+}, {
+    type: "rent" | "airbnb" | "flip";
+    status: "lead" | "analyzing" | "offer" | "under_contract" | "owned" | "sold";
+    address: string;
+    city: string;
+    state: string;
+    zipCode: string;
+    purchasePrice: number;
+    currentValue: number;
+    arv: number;
+    sqft: number;
+    bedrooms: number;
+    bathrooms: number;
+    yearBuilt: number;
+    lotSize: number;
+    latitude: number;
+    longitude: number;
+    notes?: string | undefined;
+}>;
+export declare const UpdatePropertySchema: z.ZodObject<{
+    address: z.ZodOptional<z.ZodString>;
+    city: z.ZodOptional<z.ZodString>;
+    state: z.ZodOptional<z.ZodString>;
+    zipCode: z.ZodOptional<z.ZodString>;
+    type: z.ZodOptional<z.ZodEnum<["rent", "airbnb", "flip"]>>;
+    status: z.ZodOptional<z.ZodEnum<["lead", "analyzing", "offer", "under_contract", "owned", "sold"]>>;
+    purchasePrice: z.ZodOptional<z.ZodNumber>;
+    currentValue: z.ZodOptional<z.ZodNumber>;
+    arv: z.ZodOptional<z.ZodNumber>;
+    sqft: z.ZodOptional<z.ZodNumber>;
+    bedrooms: z.ZodOptional<z.ZodNumber>;
+    bathrooms: z.ZodOptional<z.ZodNumber>;
+    yearBuilt: z.ZodOptional<z.ZodNumber>;
+    lotSize: z.ZodOptional<z.ZodNumber>;
+    latitude: z.ZodOptional<z.ZodNumber>;
+    longitude: z.ZodOptional<z.ZodNumber>;
+    notes: z.ZodOptional<z.ZodOptional<z.ZodString>>;
+}, "strip", z.ZodTypeAny, {
+    type?: "rent" | "airbnb" | "flip" | undefined;
+    status?: "lead" | "analyzing" | "offer" | "under_contract" | "owned" | "sold" | undefined;
+    address?: string | undefined;
+    city?: string | undefined;
+    state?: string | undefined;
+    zipCode?: string | undefined;
+    purchasePrice?: number | undefined;
+    currentValue?: number | undefined;
+    arv?: number | undefined;
+    sqft?: number | undefined;
+    bedrooms?: number | undefined;
+    bathrooms?: number | undefined;
+    yearBuilt?: number | undefined;
+    lotSize?: number | undefined;
+    latitude?: number | undefined;
+    longitude?: number | undefined;
+    notes?: string | undefined;
+}, {
+    type?: "rent" | "airbnb" | "flip" | undefined;
+    status?: "lead" | "analyzing" | "offer" | "under_contract" | "owned" | "sold" | undefined;
+    address?: string | undefined;
+    city?: string | undefined;
+    state?: string | undefined;
+    zipCode?: string | undefined;
+    purchasePrice?: number | undefined;
+    currentValue?: number | undefined;
+    arv?: number | undefined;
+    sqft?: number | undefined;
+    bedrooms?: number | undefined;
+    bathrooms?: number | undefined;
+    yearBuilt?: number | undefined;
+    lotSize?: number | undefined;
+    latitude?: number | undefined;
+    longitude?: number | undefined;
+    notes?: string | undefined;
+}>;
+export declare const DealScenarioSchema: z.ZodObject<{
+    name: z.ZodString;
+    purchasePrice: z.ZodNumber;
+    rehabCost: z.ZodNumber;
+    holdingCosts: z.ZodNumber;
+    closingCosts: z.ZodNumber;
+    interestRate: z.ZodNumber;
+    holdTimeMonths: z.ZodNumber;
+    exitStrategy: z.ZodEnum<["rent", "airbnb", "flip"]>;
+    monthlyRent: z.ZodOptional<z.ZodNumber>;
+    occupancyRate: z.ZodOptional<z.ZodNumber>;
+    dailyRate: z.ZodOptional<z.ZodNumber>;
+    averageOccupancy: z.ZodOptional<z.ZodNumber>;
+    salePrice: z.ZodOptional<z.ZodNumber>;
+    sellingCosts: z.ZodOptional<z.ZodNumber>;
+}, "strip", z.ZodTypeAny, {
+    name: string;
+    purchasePrice: number;
+    rehabCost: number;
+    holdingCosts: number;
+    closingCosts: number;
+    interestRate: number;
+    holdTimeMonths: number;
+    exitStrategy: "rent" | "airbnb" | "flip";
+    monthlyRent?: number | undefined;
+    occupancyRate?: number | undefined;
+    dailyRate?: number | undefined;
+    averageOccupancy?: number | undefined;
+    salePrice?: number | undefined;
+    sellingCosts?: number | undefined;
+}, {
+    name: string;
+    purchasePrice: number;
+    rehabCost: number;
+    holdingCosts: number;
+    closingCosts: number;
+    interestRate: number;
+    holdTimeMonths: number;
+    exitStrategy: "rent" | "airbnb" | "flip";
+    monthlyRent?: number | undefined;
+    occupancyRate?: number | undefined;
+    dailyRate?: number | undefined;
+    averageOccupancy?: number | undefined;
+    salePrice?: number | undefined;
+    sellingCosts?: number | undefined;
+}>;
+export declare const UpdateDealScenarioSchema: z.ZodObject<{
+    name: z.ZodOptional<z.ZodString>;
+    purchasePrice: z.ZodOptional<z.ZodNumber>;
+    rehabCost: z.ZodOptional<z.ZodNumber>;
+    holdingCosts: z.ZodOptional<z.ZodNumber>;
+    closingCosts: z.ZodOptional<z.ZodNumber>;
+    interestRate: z.ZodOptional<z.ZodNumber>;
+    holdTimeMonths: z.ZodOptional<z.ZodNumber>;
+    exitStrategy: z.ZodOptional<z.ZodEnum<["rent", "airbnb", "flip"]>>;
+    monthlyRent: z.ZodOptional<z.ZodOptional<z.ZodNumber>>;
+    occupancyRate: z.ZodOptional<z.ZodOptional<z.ZodNumber>>;
+    dailyRate: z.ZodOptional<z.ZodOptional<z.ZodNumber>>;
+    averageOccupancy: z.ZodOptional<z.ZodOptional<z.ZodNumber>>;
+    salePrice: z.ZodOptional<z.ZodOptional<z.ZodNumber>>;
+    sellingCosts: z.ZodOptional<z.ZodOptional<z.ZodNumber>>;
+}, "strip", z.ZodTypeAny, {
+    name?: string | undefined;
+    purchasePrice?: number | undefined;
+    rehabCost?: number | undefined;
+    holdingCosts?: number | undefined;
+    closingCosts?: number | undefined;
+    interestRate?: number | undefined;
+    holdTimeMonths?: number | undefined;
+    exitStrategy?: "rent" | "airbnb" | "flip" | undefined;
+    monthlyRent?: number | undefined;
+    occupancyRate?: number | undefined;
+    dailyRate?: number | undefined;
+    averageOccupancy?: number | undefined;
+    salePrice?: number | undefined;
+    sellingCosts?: number | undefined;
+}, {
+    name?: string | undefined;
+    purchasePrice?: number | undefined;
+    rehabCost?: number | undefined;
+    holdingCosts?: number | undefined;
+    closingCosts?: number | undefined;
+    interestRate?: number | undefined;
+    holdTimeMonths?: number | undefined;
+    exitStrategy?: "rent" | "airbnb" | "flip" | undefined;
+    monthlyRent?: number | undefined;
+    occupancyRate?: number | undefined;
+    dailyRate?: number | undefined;
+    averageOccupancy?: number | undefined;
+    salePrice?: number | undefined;
+    sellingCosts?: number | undefined;
+}>;
+export declare const RenovationItemSchema: z.ZodObject<{
+    category: z.ZodString;
+    description: z.ZodString;
+    estimatedCost: z.ZodNumber;
+    actualCost: z.ZodOptional<z.ZodNumber>;
+    contractor: z.ZodOptional<z.ZodString>;
+    startDate: z.ZodOptional<z.ZodString>;
+    endDate: z.ZodOptional<z.ZodString>;
+    status: z.ZodEnum<["pending", "in_progress", "completed"]>;
+    notes: z.ZodOptional<z.ZodString>;
+}, "strip", z.ZodTypeAny, {
+    status: "pending" | "in_progress" | "completed";
+    category: string;
+    description: string;
+    estimatedCost: number;
+    notes?: string | undefined;
+    actualCost?: number | undefined;
+    contractor?: string | undefined;
+    startDate?: string | undefined;
+    endDate?: string | undefined;
+}, {
+    status: "pending" | "in_progress" | "completed";
+    category: string;
+    description: string;
+    estimatedCost: number;
+    notes?: string | undefined;
+    actualCost?: number | undefined;
+    contractor?: string | undefined;
+    startDate?: string | undefined;
+    endDate?: string | undefined;
+}>;
+export declare const UpdateRenovationItemSchema: z.ZodObject<{
+    category: z.ZodOptional<z.ZodString>;
+    description: z.ZodOptional<z.ZodString>;
+    estimatedCost: z.ZodOptional<z.ZodNumber>;
+    actualCost: z.ZodOptional<z.ZodOptional<z.ZodNumber>>;
+    contractor: z.ZodOptional<z.ZodOptional<z.ZodString>>;
+    startDate: z.ZodOptional<z.ZodOptional<z.ZodString>>;
+    endDate: z.ZodOptional<z.ZodOptional<z.ZodString>>;
+    status: z.ZodOptional<z.ZodEnum<["pending", "in_progress", "completed"]>>;
+    notes: z.ZodOptional<z.ZodOptional<z.ZodString>>;
+}, "strip", z.ZodTypeAny, {
+    status?: "pending" | "in_progress" | "completed" | undefined;
+    notes?: string | undefined;
+    category?: string | undefined;
+    description?: string | undefined;
+    estimatedCost?: number | undefined;
+    actualCost?: number | undefined;
+    contractor?: string | undefined;
+    startDate?: string | undefined;
+    endDate?: string | undefined;
+}, {
+    status?: "pending" | "in_progress" | "completed" | undefined;
+    notes?: string | undefined;
+    category?: string | undefined;
+    description?: string | undefined;
+    estimatedCost?: number | undefined;
+    actualCost?: number | undefined;
+    contractor?: string | undefined;
+    startDate?: string | undefined;
+    endDate?: string | undefined;
+}>;
+export declare const UserPreferencesSchema: z.ZodObject<{
+    currency: z.ZodOptional<z.ZodString>;
+    timezone: z.ZodOptional<z.ZodString>;
+    propertyTypes: z.ZodOptional<z.ZodArray<z.ZodEnum<["rent", "airbnb", "flip"]>, "many">>;
+    propertyStatuses: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+}, "strip", z.ZodTypeAny, {
+    currency?: string | undefined;
+    timezone?: string | undefined;
+    propertyTypes?: ("rent" | "airbnb" | "flip")[] | undefined;
+    propertyStatuses?: string[] | undefined;
+}, {
+    currency?: string | undefined;
+    timezone?: string | undefined;
+    propertyTypes?: ("rent" | "airbnb" | "flip")[] | undefined;
+    propertyStatuses?: string[] | undefined;
+}>;
+export type RegisterInput = z.infer<typeof RegisterSchema>;
+export type LoginInput = z.infer<typeof LoginSchema>;
+export type PropertyInput = z.infer<typeof PropertySchema>;
+export type DealScenarioInput = z.infer<typeof DealScenarioSchema>;
+export type RenovationItemInput = z.infer<typeof RenovationItemSchema>;
+export type UserPreferencesInput = z.infer<typeof UserPreferencesSchema>;
+//# sourceMappingURL=schemas.d.ts.map

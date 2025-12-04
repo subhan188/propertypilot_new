@@ -1,0 +1,291 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============= USERS =============
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String   // bcrypt hash
+  name      String
+  avatar    String?
+  currency  String   @default("USD")
+  timezone  String   @default("America/New_York")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  properties    Property[]
+  preferences   UserPreferences?
+  integrations  Integration[]
+  auditLogs     AuditLog[]
+  sessions      Session[]
+  alerts        Alert[]
+
+  @@index([email])
+}
+
+// ============= PROPERTIES =============
+model Property {
+  id            String   @id @default(cuid())
+  userId        String
+
+  // Basic information
+  address       String
+  city          String
+  state         String
+  zipCode       String
+  type          String   // 'rent' | 'airbnb' | 'flip'
+  status        String   // 'lead' | 'analyzing' | 'offer' | 'under_contract' | 'owned' | 'sold'
+  purchasePrice Float
+  currentValue  Float
+  arv           Float    // After Repair Value
+  sqft          Float
+  bedrooms      Int
+  bathrooms     Float
+  yearBuilt     Int
+  lotSize       Float
+  latitude      Float
+  longitude     Float
+
+  // Zillow/HasData fields
+  zpid          String?  @unique       // Zillow Property ID
+  zestimate     Float?                 // Zillow Estimate
+  rentZestimate Float?                 // Zillow Rental Estimate
+  taxAssessment Float?
+  taxYear       Int?
+  priceHistory  Json?    @default("[]") // Array of {date, price}
+  rentalEstimateHistory Json? @default("[]") // Array of {date, estimate}
+  photos        String[] @default([])
+  zillowUrl     String?
+  zillowStatus  String?  // 'forSale' | 'pending' | 'sold' | 'rental' | 'off-market'
+
+  // Investor-specific fields
+  rehabCostEstimate Float?
+  arvEstimate   Float?
+  favorite      Boolean  @default(false)
+  lastFetched   DateTime?
+  notes         String?
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  scenarios     DealScenario[]
+  renovations   RenovationItem[]
+  alerts        Alert[]
+  fileUploads   FileUpload[]
+  comps         Comp[]
+
+  @@index([userId])
+  @@index([zpid])
+  @@index([status])
+  @@index([type])
+  @@index([favorite])
+  @@index([createdAt])
+}
+
+// ============= DEAL SCENARIOS =============
+model DealScenario {
+  id             String   @id @default(cuid())
+  propertyId     String
+  name           String   // e.g., "Conservative Flip", "BRRRR Strategy"
+  purchasePrice  Float
+  rehabCost      Float
+  holdingCosts   Float
+  closingCosts   Float
+  interestRate   Float
+  holdTimeMonths Int
+  exitStrategy   String   // 'rent' | 'airbnb' | 'flip'
+
+  // Rental specific
+  monthlyRent    Float?
+  occupancyRate  Float?   // 0-100
+
+  // Airbnb specific
+  dailyRate      Float?
+  averageOccupancy Float? // 0-100
+
+  // Flip specific
+  salePrice      Float?
+  sellingCosts   Float?
+
+  // Calculated fields (computed server-side, stored for perf)
+  capRate        Float    @default(0)
+  cashOnCash     Float    @default(0)
+  roi            Float    @default(0)
+  monthlyNOI     Float    @default(0)
+  totalProfit    Float    @default(0)
+  irr            Float    @default(0)
+  npv            Float    @default(0)
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relations
+  property       Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@index([propertyId])
+  @@index([createdAt])
+}
+
+// ============= RENOVATION ITEMS =============
+model RenovationItem {
+  id             String   @id @default(cuid())
+  propertyId     String
+  category       String   // 'Kitchen', 'Bathrooms', 'Flooring', etc.
+  description    String
+  estimatedCost  Float
+  actualCost     Float?
+  contractor     String?
+  startDate      DateTime?
+  endDate        DateTime?
+  status         String   // 'pending' | 'in_progress' | 'completed'
+  notes          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relations
+  property       Property       @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  photos         FileUpload[]
+
+  @@index([propertyId])
+  @@index([status])
+}
+
+// ============= ALERTS =============
+model Alert {
+  id          String   @id @default(cuid())
+  userId      String
+  type        String   // 'info' | 'warning' | 'success' | 'error'
+  title       String
+  message     String
+  propertyId  String?
+  read        Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  // Relations
+  property    Property? @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([read])
+  @@index([createdAt])
+}
+
+// ============= FILE UPLOADS =============
+model FileUpload {
+  id             String   @id @default(cuid())
+  propertyId     String?
+  renovationId   String?
+  originalName   String
+  mimeType       String
+  size           Int
+  s3Key          String   // Full path in S3/MinIO
+  signedUrl      String?  // Cached signed URL
+  signedUrlExpiresAt DateTime?
+  createdAt      DateTime @default(now())
+
+  // Relations
+  property       Property? @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+  renovation     RenovationItem? @relation(fields: [renovationId], references: [id], onDelete: SetNull)
+
+  @@index([propertyId])
+  @@index([renovationId])
+}
+
+// ============= USER PREFERENCES =============
+model UserPreferences {
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  currency       String   @default("USD")
+  timezone       String   @default("America/New_York")
+  propertyTypes  String[] @default(["rent", "airbnb", "flip"])
+  propertyStatuses String[] @default(["lead", "analyzing", "offer", "under_contract", "owned"])
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// ============= INTEGRATIONS =============
+model Integration {
+  id             String   @id @default(cuid())
+  userId         String
+  service        String   // 'zillow' | 'airdna' | 'mls' | 'stripe'
+  isActive       Boolean  @default(false)
+  apiKey         String?  // Encrypted
+  apiSecret      String?  // Encrypted
+  config         Json?    // Additional config as JSON
+  lastSyncAt     DateTime?
+  syncStatus     String?  // 'success' | 'failed' | 'pending'
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, service])
+  @@index([userId])
+}
+
+// ============= AUDIT LOGS =============
+model AuditLog {
+  id             String   @id @default(cuid())
+  userId         String
+  action         String   // 'CREATE' | 'UPDATE' | 'DELETE'
+  resourceType   String   // 'Property' | 'DealScenario' | etc.
+  resourceId     String?
+  changes        Json?    // Before/after diff
+  ipAddress      String?
+  userAgent      String?
+  createdAt      DateTime @default(now())
+
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+// ============= COMPS (Comparable Sales) =============
+model Comp {
+  id             String   @id @default(cuid())
+  propertyId     String
+  address        String
+  salePrice      Float
+  pricePerSqft   Float
+  saleDate       DateTime
+  beds           Int
+  baths          Float
+  sqft           Float
+  source         String   // 'zillow' | 'mls' | 'manual'
+  externalId     String?  // ID from external source
+  createdAt      DateTime @default(now())
+
+  property       Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@index([propertyId])
+  @@index([saleDate])
+}
+
+// ============= SESSIONS =============
+model Session {
+  sid       String   @id
+  sess      Json
+  expire    DateTime
+  userId    String?
+
+  user      User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([expire])
+}
