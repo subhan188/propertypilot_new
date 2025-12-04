@@ -1,7 +1,7 @@
 import { AppLayout } from "@/components/layout/AppLayout";
 import { PropertyCard } from "@/components/ui/property-card";
 import { PropertyDetail } from "@/components/PropertyDetail";
-import { ZillowSearch } from "@/components/ZillowSearch";
+import { ZillowSearchPanel } from "@/components/ZillowSearchPanel";
 import { mockProperties } from "@/mocks/properties";
 import { useState } from "react";
 import { motion } from "framer-motion";
@@ -258,7 +258,7 @@ const Properties = () => {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.1 }}
           >
-            <ZillowSearch />
+            <ZillowSearchPanel />
           </motion.div>
         )}
       </div>
