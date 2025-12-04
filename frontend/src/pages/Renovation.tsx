@@ -22,9 +22,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { 
-  Plus, 
-  Camera, 
+import {
+  Plus,
+  Camera,
   Calendar,
   DollarSign,
   User,
@@ -32,6 +32,7 @@ import {
   Clock,
   AlertCircle
 } from "lucide-react";
+import { AddRenovationModal } from "@/components/modals/AddRenovationModal";
 
 const statusColors: Record<RenovationStatus, string> = {
   pending: "bg-muted text-muted-foreground",
@@ -48,6 +49,7 @@ const statusIcons: Record<RenovationStatus, typeof Clock> = {
 const Renovation = () => {
   const [selectedPropertyId, setSelectedPropertyId] = useState<string>('3');
   const [items, setItems] = useState<RenovationItem[]>(mockRenovationItems);
+  const [addItemOpen, setAddItemOpen] = useState(false);
 
   const selectedProperty = mockProperties.find(p => p.id === selectedPropertyId);
   const propertyItems = items.filter(item => item.propertyId === selectedPropertyId);
@@ -65,9 +67,19 @@ const Renovation = () => {
       maximumFractionDigits: 0,
     }).format(value);
 
-  const propertiesWithRenovation = mockProperties.filter(p => 
+  const propertiesWithRenovation = mockProperties.filter(p =>
     ['flip', 'under_contract'].includes(p.status) || p.type === 'flip'
   );
+
+  const handleAddRenovation = (newRenovation: any) => {
+    // Add property ID to the renovation item
+    const renovationWithProperty = {
+      ...newRenovation,
+      propertyId: selectedPropertyId
+    };
+    setItems([...items, renovationWithProperty]);
+    setAddItemOpen(false);
+  };
 
   return (
     <AppLayout>
@@ -95,7 +107,7 @@ const Renovation = () => {
                 ))}
               </SelectContent>
             </Select>
-            <Button className="btn-accent">
+            <Button className="btn-accent" onClick={() => setAddItemOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
               Add Item
             </Button>
@@ -233,7 +245,7 @@ const Renovation = () => {
               {propertyItems.length === 0 && (
                 <div className="text-center py-12">
                   <p className="text-muted-foreground">No renovation items yet.</p>
-                  <Button variant="link" className="mt-2">
+                  <Button variant="link" className="mt-2" onClick={() => setAddItemOpen(true)}>
                     <Plus className="h-4 w-4 mr-1" />
                     Add your first item
                   </Button>
@@ -243,6 +255,12 @@ const Renovation = () => {
           </>
         )}
       </div>
+
+      <AddRenovationModal
+        open={addItemOpen}
+        onOpenChange={setAddItemOpen}
+        onAddRenovation={handleAddRenovation}
+      />
     </AppLayout>
   );
 };

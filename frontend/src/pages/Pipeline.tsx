@@ -14,6 +14,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { AddDealModal } from "@/components/modals/AddDealModal";
 
 const columnColors: Record<PropertyStatus, string> = {
   lead: "border-t-muted-foreground",
@@ -91,8 +92,10 @@ function PipelineCard({ property, onClick }: PipelineCardProps) {
 const Pipeline = () => {
   const navigate = useNavigate();
   const [columns, setColumns] = useState<PipelineColumn[]>(mockPipelineColumns);
+  const [addDealOpen, setAddDealOpen] = useState(false);
+  const [selectedColumn, setSelectedColumn] = useState<PropertyStatus | null>(null);
 
-  const totalValue = columns.reduce((acc, col) => 
+  const totalValue = columns.reduce((acc, col) =>
     acc + col.properties.reduce((sum, p) => sum + p.currentValue, 0), 0
   );
 
@@ -103,6 +106,26 @@ const Pipeline = () => {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(value);
+
+  const handleAddDeal = (newDeal: any) => {
+    const columnStatus = selectedColumn || newDeal.column;
+    setColumns(columns.map(col => {
+      if (col.id === columnStatus) {
+        return {
+          ...col,
+          properties: [...col.properties, newDeal]
+        };
+      }
+      return col;
+    }));
+    setAddDealOpen(false);
+    setSelectedColumn(null);
+  };
+
+  const handleOpenDealModal = (columnId: PropertyStatus) => {
+    setSelectedColumn(columnId);
+    setAddDealOpen(true);
+  };
 
   return (
     <AppLayout>
@@ -119,7 +142,7 @@ const Pipeline = () => {
               {mockProperties.length} deals · {formatCurrency(totalValue)} total value
             </p>
           </div>
-          <Button className="btn-accent">
+          <Button className="btn-accent" onClick={() => handleOpenDealModal('lead')}>
             <Plus className="h-4 w-4 mr-2" />
             Add Deal
           </Button>
@@ -175,7 +198,11 @@ const Pipeline = () => {
 
               {/* Add Deal Button */}
               <div className="p-3 border-t">
-                <Button variant="ghost" className="w-full justify-start text-muted-foreground">
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start text-muted-foreground hover:text-foreground"
+                  onClick={() => handleOpenDealModal(column.id)}
+                >
                   <Plus className="h-4 w-4 mr-2" />
                   Add deal
                 </Button>
@@ -184,6 +211,14 @@ const Pipeline = () => {
           ))}
         </motion.div>
       </div>
+
+      <AddDealModal
+        open={addDealOpen}
+        onOpenChange={setAddDealOpen}
+        onAddDeal={handleAddDeal}
+        preSelectedColumn={selectedColumn || 'lead'}
+        properties={mockProperties}
+      />
     </AppLayout>
   );
 };

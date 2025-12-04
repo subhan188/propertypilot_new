@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 import { KPIChip } from "@/components/ui/kpi-chip";
-import { mockKPIData } from "@/mocks/properties";
+import { mockKPIData, mockAlerts } from "@/mocks/properties";
 import {
   Search,
   Bell,
@@ -19,14 +19,18 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { QuickCaptureModal } from "@/components/modals/QuickCaptureModal";
+import { NotificationCenter } from "@/components/modals/NotificationCenter";
 
 interface HeaderProps {
   sidebarCollapsed?: boolean;
 }
 
 export function Header({ sidebarCollapsed }: HeaderProps) {
+  const navigate = useNavigate();
   const [quickCaptureOpen, setQuickCaptureOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
 
   return (
     <>
@@ -80,6 +84,7 @@ export function Header({ sidebarCollapsed }: HeaderProps) {
               variant="ghost"
               size="icon"
               className="relative"
+              onClick={() => setNotificationsOpen(true)}
             >
               <Bell className="h-5 w-5" />
               <span className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-destructive text-[10px] font-medium text-destructive-foreground flex items-center justify-center">
@@ -108,20 +113,26 @@ export function Header({ sidebarCollapsed }: HeaderProps) {
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuLabel>My Account</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>Profile</DropdownMenuItem>
-                <DropdownMenuItem>Settings</DropdownMenuItem>
-                <DropdownMenuItem>Billing</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate("/profile")}>Profile</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate("/settings")}>Settings</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate("/settings?tab=billing")}>Billing</DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>Log out</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate("/")}>Log out</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
         </div>
       </header>
 
-      <QuickCaptureModal 
-        open={quickCaptureOpen} 
-        onOpenChange={setQuickCaptureOpen} 
+      <QuickCaptureModal
+        open={quickCaptureOpen}
+        onOpenChange={setQuickCaptureOpen}
+      />
+
+      <NotificationCenter
+        open={notificationsOpen}
+        onOpenChange={setNotificationsOpen}
+        alerts={mockAlerts}
       />
     </>
   );

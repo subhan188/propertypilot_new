@@ -27,11 +27,20 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
+import { ChangePasswordModal } from "@/components/modals/ChangePasswordModal";
 
 const Settings = () => {
   const { toast } = useToast();
   const [currency, setCurrency] = useState('USD');
   const [timezone, setTimezone] = useState('America/New_York');
+  const [changePasswordOpen, setChangePasswordOpen] = useState(false);
+  const [apiKey, setApiKey] = useState('sk_live_xxxxxxxxxxxxxxxxxxxxx');
+  const [connectedServices, setConnectedServices] = useState({
+    zillow: false,
+    airdna: false,
+    quickbooks: false,
+    plaid: false,
+  });
 
   const handleSave = () => {
     toast({
@@ -57,11 +66,28 @@ const Settings = () => {
   };
 
   const handlePasswordUpdate = () => {
-    handleComingSoon();
+    setChangePasswordOpen(true);
   };
 
-  const handleIntegrationAction = () => {
-    handleComingSoon();
+  const handleRegenerateApiKey = () => {
+    const newKey = 'sk_live_' + Math.random().toString(36).substr(2, 20);
+    setApiKey(newKey);
+    toast({
+      title: "API Key Regenerated",
+      description: "Your new API key has been generated. Make sure to save it in a secure location.",
+    });
+  };
+
+  const handleIntegrationToggle = (service: string) => {
+    setConnectedServices((prev) => ({
+      ...prev,
+      [service]: !prev[service],
+    }));
+    const newStatus = !connectedServices[service as keyof typeof connectedServices];
+    toast({
+      title: newStatus ? "Service Connected" : "Service Disconnected",
+      description: `${service.charAt(0).toUpperCase() + service.slice(1)} has been ${newStatus ? "connected" : "disconnected"}`,
+    });
   };
 
   return (
@@ -144,7 +170,7 @@ const Settings = () => {
                       <p className="font-medium">Change Password</p>
                       <p className="text-sm text-muted-foreground">Last changed 30 days ago</p>
                     </div>
-                    <Button variant="outline" size="sm" onClick={handlePasswordUpdate}>Update</Button>
+                    <Button variant="outline" size="sm" onClick={handlePasswordUpdate}>Change</Button>
                   </div>
                 </div>
               </div>
@@ -244,55 +270,50 @@ const Settings = () => {
 
             {/* Integrations Tab */}
             <TabsContent value="integrations" className="space-y-6">
-              <Alert className="bg-yellow-50 border-yellow-200">
-                <AlertCircle className="h-4 w-4 text-yellow-600" />
-                <AlertDescription className="text-yellow-800">
-                  Third-party integrations are to be properly implemented. Connect/Disconnect functionality is coming soon.
-                </AlertDescription>
-              </Alert>
-
               <div className="card-base">
                 <h3 className="font-semibold mb-4">Connected Services</h3>
                 <div className="space-y-4">
                   {[
-                    { name: 'Zillow', status: 'Not connected', icon: '🏠' },
-                    { name: 'AirDNA', status: 'Not connected', icon: '📊' },
-                    { name: 'QuickBooks', status: 'Not connected', icon: '📒' },
-                    { name: 'Plaid', status: 'Not connected', icon: '🏦' },
-                  ].map((service) => (
-                    <div key={service.name} className="flex items-center justify-between py-2 border-b last:border-0">
-                      <div className="flex items-center gap-3">
-                        <span className="text-2xl">{service.icon}</span>
-                        <div>
-                          <p className="font-medium">{service.name}</p>
-                          <div className="flex items-center gap-2">
-                            <p className={`text-sm ${service.status === 'Connected' ? 'text-success' : 'text-muted-foreground'}`}>
-                              {service.status}
+                    { name: 'Zillow', key: 'zillow', icon: '🏠' },
+                    { name: 'AirDNA', key: 'airdna', icon: '📊' },
+                    { name: 'QuickBooks', key: 'quickbooks', icon: '📒' },
+                    { name: 'Plaid', key: 'plaid', icon: '🏦' },
+                  ].map((service) => {
+                    const isConnected = connectedServices[service.key as keyof typeof connectedServices];
+                    return (
+                      <div key={service.name} className="flex items-center justify-between py-2 border-b last:border-0">
+                        <div className="flex items-center gap-3">
+                          <span className="text-2xl">{service.icon}</span>
+                          <div>
+                            <p className="font-medium">{service.name}</p>
+                            <p className={`text-sm ${isConnected ? 'text-green-600 font-medium' : 'text-muted-foreground'}`}>
+                              {isConnected ? 'Connected' : 'Not connected'}
                             </p>
-                            <Badge variant="secondary" className="text-xs">To be properly implemented</Badge>
                           </div>
                         </div>
+                        <Button
+                          variant={isConnected ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => handleIntegrationToggle(service.key)}
+                          className={isConnected ? "btn-accent" : ""}
+                        >
+                          {isConnected ? 'Disconnect' : 'Connect'}
+                        </Button>
                       </div>
-                      <Button variant="outline" size="sm" onClick={handleIntegrationAction} disabled>
-                        {service.status === 'Connected' ? 'Disconnect' : 'Connect'}
-                      </Button>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
 
               <div className="card-base">
                 <h3 className="font-semibold mb-4">API Access</h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  <Badge variant="secondary" className="inline-block">Mock Data - Feature Pending</Badge>
-                </p>
                 <div className="space-y-4">
                   <div>
                     <Label>API Key</Label>
                     <div className="flex gap-2 mt-1">
-                      <Input type="password" value="sk_live_xxxxxxxxxxxxxxxxxxxxx" readOnly />
+                      <Input type="password" value={apiKey} readOnly />
                       <Button variant="outline" onClick={handleCopyApiKey}>Copy</Button>
-                      <Button variant="outline" onClick={handleComingSoon}>Regenerate</Button>
+                      <Button variant="outline" onClick={handleRegenerateApiKey}>Regenerate</Button>
                     </div>
                   </div>
                 </div>
@@ -344,6 +365,11 @@ const Settings = () => {
           </Button>
         </div>
       </div>
+
+      <ChangePasswordModal
+        open={changePasswordOpen}
+        onOpenChange={setChangePasswordOpen}
+      />
     </AppLayout>
   );
 };

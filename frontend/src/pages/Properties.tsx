@@ -17,24 +17,32 @@ import {
 } from "@/components/ui/select";
 import { Search, Filter, Grid, List, Plus, SlidersHorizontal } from "lucide-react";
 import { PropertyType, PropertyStatus } from "@/types/property";
+import { AddPropertyModal } from "@/components/modals/AddPropertyModal";
 
 const Properties = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id?: string }>();
-  const selectedProperty = id ? mockProperties.find(p => p.id === id) : null;
+  const [properties, setProperties] = useState(mockProperties);
+  const selectedProperty = id ? properties.find(p => p.id === id) : null;
   const [activeTab, setActiveTab] = useState<'my-properties' | 'search-zillow'>('my-properties');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState<PropertyType | 'all'>('all');
   const [statusFilter, setStatusFilter] = useState<PropertyStatus | 'all'>('all');
+  const [addPropertyOpen, setAddPropertyOpen] = useState(false);
 
-  const filteredProperties = mockProperties.filter(property => {
+  const filteredProperties = properties.filter(property => {
     const matchesSearch = property.address.toLowerCase().includes(searchQuery.toLowerCase()) ||
       property.city.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesType = typeFilter === 'all' || property.type === typeFilter;
     const matchesStatus = statusFilter === 'all' || property.status === statusFilter;
     return matchesSearch && matchesType && matchesStatus;
   });
+
+  const handleAddProperty = (newProperty: any) => {
+    setProperties([...properties, newProperty]);
+    setAddPropertyOpen(false);
+  };
 
   // If a property is selected, show detail view
   if (selectedProperty) {
@@ -61,13 +69,13 @@ const Properties = () => {
             <h1 className="text-2xl font-bold text-foreground">Properties</h1>
             <p className="text-muted-foreground">
               {activeTab === 'my-properties'
-                ? `Manage your ${mockProperties.length} properties`
+                ? `Manage your ${properties.length} properties`
                 : 'Search and import properties from Zillow'
               }
             </p>
           </div>
           {activeTab === 'my-properties' && (
-            <Button className="btn-accent">
+            <Button className="btn-accent" onClick={() => setAddPropertyOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
               Add Property
             </Button>
@@ -181,7 +189,7 @@ const Properties = () => {
             {/* Results count */}
             <div className="flex items-center justify-between">
               <p className="text-sm text-muted-foreground">
-                Showing {filteredProperties.length} of {mockProperties.length} properties
+                Showing {filteredProperties.length} of {properties.length} properties
               </p>
             </div>
 
@@ -254,6 +262,12 @@ const Properties = () => {
           </motion.div>
         )}
       </div>
+
+      <AddPropertyModal
+        open={addPropertyOpen}
+        onOpenChange={setAddPropertyOpen}
+        onAddProperty={handleAddProperty}
+      />
     </AppLayout>
   );
 };
