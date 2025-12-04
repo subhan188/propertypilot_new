@@ -1,5 +1,5 @@
 import { AppLayout } from "@/components/layout/AppLayout";
-import { useState, useEffect, useMemo } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { KPIData, PortfolioTrendPoint, DealFlow, PropertyTypeBreakdown } from "@/types/api";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
