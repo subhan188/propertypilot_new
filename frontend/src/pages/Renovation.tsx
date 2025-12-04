@@ -30,9 +30,11 @@ import {
   User,
   CheckCircle2,
   Clock,
-  AlertCircle
+  AlertCircle,
+  Upload
 } from "lucide-react";
 import { AddRenovationModal } from "@/components/modals/AddRenovationModal";
+import { FileUploadModal } from "@/components/modals/FileUploadModal";
 
 const statusColors: Record<RenovationStatus, string> = {
   pending: "bg-muted text-muted-foreground",
@@ -50,6 +52,7 @@ const Renovation = () => {
   const [selectedPropertyId, setSelectedPropertyId] = useState<string>('3');
   const [items, setItems] = useState<RenovationItem[]>(mockRenovationItems);
   const [addItemOpen, setAddItemOpen] = useState(false);
+  const [uploadOpen, setUploadOpen] = useState(false);
 
   const selectedProperty = mockProperties.find(p => p.id === selectedPropertyId);
   const propertyItems = items.filter(item => item.propertyId === selectedPropertyId);
@@ -107,6 +110,10 @@ const Renovation = () => {
                 ))}
               </SelectContent>
             </Select>
+            <Button variant="outline" onClick={() => setUploadOpen(true)}>
+              <Upload className="h-4 w-4 mr-2" />
+              Upload Docs
+            </Button>
             <Button className="btn-accent" onClick={() => setAddItemOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
               Add Item
@@ -260,6 +267,12 @@ const Renovation = () => {
         open={addItemOpen}
         onOpenChange={setAddItemOpen}
         onAddRenovation={handleAddRenovation}
+      />
+
+      <FileUploadModal
+        open={uploadOpen}
+        onOpenChange={setUploadOpen}
+        propertyId={selectedPropertyId}
       />
     </AppLayout>
   );

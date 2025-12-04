@@ -4,6 +4,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Property, PropertyStatus, PipelineColumn } from "@/types/property";
+import { DealScenario } from "@/types/api";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,6 +16,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { AddDealModal } from "@/components/modals/AddDealModal";
+import { DealAnalysisModal } from "@/components/modals/DealAnalysisModal";
 
 const columnColors: Record<PropertyStatus, string> = {
   lead: "border-t-muted-foreground",
@@ -69,8 +71,13 @@ function PipelineCard({ property, onClick }: PipelineCardProps) {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem>View Details</DropdownMenuItem>
-                <DropdownMenuItem>Analyze Deal</DropdownMenuItem>
+                <DropdownMenuItem onClick={(e) => {
+                  e.stopPropagation();
+                  navigate(`/properties/${property.id}`);
+                }}>View Details</DropdownMenuItem>
+                <DropdownMenuItem onClick={(e) => {
+                  e.stopPropagation();
+                }}>Analyze Deal</DropdownMenuItem>
                 <DropdownMenuItem>Move to...</DropdownMenuItem>
                 <DropdownMenuItem className="text-destructive">Archive</DropdownMenuItem>
               </DropdownMenuContent>
@@ -94,6 +101,8 @@ const Pipeline = () => {
   const [columns, setColumns] = useState<PipelineColumn[]>(mockPipelineColumns);
   const [addDealOpen, setAddDealOpen] = useState(false);
   const [selectedColumn, setSelectedColumn] = useState<PropertyStatus | null>(null);
+  const [analysisOpen, setAnalysisOpen] = useState(false);
+  const [selectedScenario, setSelectedScenario] = useState<DealScenario | null>(null);
 
   const totalValue = columns.reduce((acc, col) =>
     acc + col.properties.reduce((sum, p) => sum + p.currentValue, 0), 0
@@ -218,6 +227,12 @@ const Pipeline = () => {
         onAddDeal={handleAddDeal}
         preSelectedColumn={selectedColumn || 'lead'}
         properties={mockProperties}
+      />
+
+      <DealAnalysisModal
+        open={analysisOpen}
+        onOpenChange={setAnalysisOpen}
+        scenario={selectedScenario}
       />
     </AppLayout>
   );

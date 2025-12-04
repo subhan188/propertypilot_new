@@ -6,6 +6,7 @@ import {
   Map,
   Kanban,
   Hammer,
+  TrendingUp,
   FileBarChart,
   Settings,
   ChevronLeft,
@@ -19,10 +20,11 @@ interface SidebarProps {
 }
 
 const navItems = [
-  { icon: LayoutDashboard, label: "Dashboard", path: "/" },
+  { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
   { icon: Building2, label: "Properties", path: "/properties" },
   { icon: Map, label: "Map", path: "/map" },
   { icon: Kanban, label: "Pipeline", path: "/pipeline" },
+  { icon: TrendingUp, label: "Scenarios", path: "/scenarios" },
   { icon: Hammer, label: "Renovation", path: "/renovation" },
   { icon: FileBarChart, label: "Reports", path: "/reports" },
   { icon: Settings, label: "Settings", path: "/settings" },
