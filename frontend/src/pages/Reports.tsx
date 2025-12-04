@@ -4,6 +4,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
 import {
   Select,
   SelectContent,
@@ -23,8 +24,17 @@ import {
 } from "lucide-react";
 
 const Reports = () => {
+  const { toast } = useToast();
   const [reportType, setReportType] = useState('portfolio');
   const [timeRange, setTimeRange] = useState('ytd');
+
+  const handleExportComingSoon = () => {
+    toast({
+      title: "Feature Coming Soon",
+      description: "Export functionality is to be properly implemented.",
+      variant: "default",
+    });
+  };
 
   const reportTypes = [
     { id: 'portfolio', name: 'Portfolio Summary', icon: Building2 },
@@ -47,11 +57,11 @@ const Reports = () => {
             <p className="text-muted-foreground">Generate and share portfolio reports</p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline">
+            <Button variant="outline" onClick={handleExportComingSoon}>
               <Share2 className="h-4 w-4 mr-2" />
               Share Report
             </Button>
-            <Button className="btn-accent">
+            <Button className="btn-accent" onClick={handleExportComingSoon}>
               <Download className="h-4 w-4 mr-2" />
               Export
             </Button>

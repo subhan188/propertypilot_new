@@ -56,7 +56,7 @@ export function Sidebar({ className }: SidebarProps) {
               <div className="h-8 w-8 rounded-lg bg-sidebar-primary flex items-center justify-center">
                 <Building2 className="h-5 w-5 text-sidebar-primary-foreground" />
               </div>
-              <span className="font-semibold text-lg">PropertyPilot</span>
+              <span className="font-semibold text-lg">R&S Empire</span>
             </motion.div>
           )}
         </AnimatePresence>

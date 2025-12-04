@@ -13,16 +13,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { 
-  User, 
-  Bell, 
-  Globe, 
-  Shield, 
+import {
+  User,
+  Bell,
+  Globe,
+  Shield,
   CreditCard,
   Key,
   Smartphone,
-  Save
+  Save,
+  AlertCircle
 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 
 const Settings = () => {
@@ -35,6 +38,30 @@ const Settings = () => {
       title: "Settings saved",
       description: "Your preferences have been updated successfully.",
     });
+  };
+
+  const handleComingSoon = () => {
+    toast({
+      title: "Feature Coming Soon",
+      description: "This feature is to be properly implemented.",
+      variant: "default",
+    });
+  };
+
+  const handleCopyApiKey = async () => {
+    await navigator.clipboard.writeText("sk_live_xxxxxxxxxxxxxxxxxxxxx");
+    toast({
+      title: "Copied!",
+      description: "API key copied to clipboard.",
+    });
+  };
+
+  const handlePasswordUpdate = () => {
+    handleComingSoon();
+  };
+
+  const handleIntegrationAction = () => {
+    handleComingSoon();
   };
 
   return (
@@ -117,7 +144,7 @@ const Settings = () => {
                       <p className="font-medium">Change Password</p>
                       <p className="text-sm text-muted-foreground">Last changed 30 days ago</p>
                     </div>
-                    <Button variant="outline" size="sm">Update</Button>
+                    <Button variant="outline" size="sm" onClick={handlePasswordUpdate}>Update</Button>
                   </div>
                 </div>
               </div>
@@ -217,13 +244,20 @@ const Settings = () => {
 
             {/* Integrations Tab */}
             <TabsContent value="integrations" className="space-y-6">
+              <Alert className="bg-yellow-50 border-yellow-200">
+                <AlertCircle className="h-4 w-4 text-yellow-600" />
+                <AlertDescription className="text-yellow-800">
+                  Third-party integrations are to be properly implemented. Connect/Disconnect functionality is coming soon.
+                </AlertDescription>
+              </Alert>
+
               <div className="card-base">
                 <h3 className="font-semibold mb-4">Connected Services</h3>
                 <div className="space-y-4">
                   {[
-                    { name: 'Zillow', status: 'Connected', icon: '🏠' },
+                    { name: 'Zillow', status: 'Not connected', icon: '🏠' },
                     { name: 'AirDNA', status: 'Not connected', icon: '📊' },
-                    { name: 'QuickBooks', status: 'Connected', icon: '📒' },
+                    { name: 'QuickBooks', status: 'Not connected', icon: '📒' },
                     { name: 'Plaid', status: 'Not connected', icon: '🏦' },
                   ].map((service) => (
                     <div key={service.name} className="flex items-center justify-between py-2 border-b last:border-0">
@@ -231,12 +265,15 @@ const Settings = () => {
                         <span className="text-2xl">{service.icon}</span>
                         <div>
                           <p className="font-medium">{service.name}</p>
-                          <p className={`text-sm ${service.status === 'Connected' ? 'text-success' : 'text-muted-foreground'}`}>
-                            {service.status}
-                          </p>
+                          <div className="flex items-center gap-2">
+                            <p className={`text-sm ${service.status === 'Connected' ? 'text-success' : 'text-muted-foreground'}`}>
+                              {service.status}
+                            </p>
+                            <Badge variant="secondary" className="text-xs">To be properly implemented</Badge>
+                          </div>
                         </div>
                       </div>
-                      <Button variant={service.status === 'Connected' ? 'outline' : 'default'} size="sm">
+                      <Button variant="outline" size="sm" onClick={handleIntegrationAction} disabled>
                         {service.status === 'Connected' ? 'Disconnect' : 'Connect'}
                       </Button>
                     </div>
@@ -246,13 +283,16 @@ const Settings = () => {
 
               <div className="card-base">
                 <h3 className="font-semibold mb-4">API Access</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  <Badge variant="secondary" className="inline-block">Mock Data - Feature Pending</Badge>
+                </p>
                 <div className="space-y-4">
                   <div>
                     <Label>API Key</Label>
                     <div className="flex gap-2 mt-1">
                       <Input type="password" value="sk_live_xxxxxxxxxxxxxxxxxxxxx" readOnly />
-                      <Button variant="outline">Copy</Button>
-                      <Button variant="outline">Regenerate</Button>
+                      <Button variant="outline" onClick={handleCopyApiKey}>Copy</Button>
+                      <Button variant="outline" onClick={handleComingSoon}>Regenerate</Button>
                     </div>
                   </div>
                 </div>
@@ -261,18 +301,25 @@ const Settings = () => {
 
             {/* Billing Tab */}
             <TabsContent value="billing" className="space-y-6">
-              <div className="card-base">
+              <Alert className="bg-red-50 border-red-200">
+                <AlertCircle className="h-4 w-4 text-red-600" />
+                <AlertDescription className="text-red-800">
+                  Billing Management is to be properly implemented. All features below are mocked and non-functional.
+                </AlertDescription>
+              </Alert>
+
+              <div className="card-base opacity-60">
                 <h3 className="font-semibold mb-4">Current Plan</h3>
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-lg font-bold">Pro Plan</p>
                     <p className="text-sm text-muted-foreground">$29/month · Billed monthly</p>
                   </div>
-                  <Button variant="outline">Upgrade Plan</Button>
+                  <Button variant="outline" onClick={handleComingSoon} disabled>Upgrade Plan</Button>
                 </div>
               </div>
 
-              <div className="card-base">
+              <div className="card-base opacity-60">
                 <h3 className="font-semibold mb-4">Payment Method</h3>
                 <div className="flex items-center justify-between py-2">
                   <div className="flex items-center gap-3">
@@ -282,7 +329,7 @@ const Settings = () => {
                       <p className="text-sm text-muted-foreground">Expires 12/25</p>
                     </div>
                   </div>
-                  <Button variant="outline" size="sm">Update</Button>
+                  <Button variant="outline" size="sm" onClick={handleComingSoon} disabled>Update</Button>
                 </div>
               </div>
             </TabsContent>
