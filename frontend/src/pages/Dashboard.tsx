@@ -1,7 +1,6 @@
 import { AppLayout } from "@/components/layout/AppLayout";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
-import { useApi } from "@/hooks/useApi";
 import { KPIData, PortfolioTrendPoint, DealFlow, PropertyTypeBreakdown } from "@/types/api";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -33,70 +32,45 @@ import { cn } from "@/lib/utils";
 
 const COLORS = ["#3B82F6", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6", "#EC4899"];
 
+const MOCK_KPI: KPIData = {
+  portfolioValue: 2850000,
+  portfolioValueChange: 125000,
+  monthlyCashflow: 8500,
+  cashflowChange: 1200,
+  availableEquity: 450000,
+  equityChange: 35000,
+  propertyCount: 8,
+  averageCapRate: 7.25,
+};
+
+const MOCK_TRENDS: PortfolioTrendPoint[] = [
+  { date: "2025-11-01", value: 2400000 },
+  { date: "2025-12-01", value: 2550000 },
+  { date: "2025-01-01", value: 2650000 },
+  { date: "2025-02-01", value: 2725000 },
+  { date: "2025-03-01", value: 2850000 },
+];
+
+const MOCK_DEAL_FLOW: DealFlow = {
+  lead: 3,
+  analyzing: 2,
+  offer: 1,
+  under_contract: 1,
+  owned: 8,
+  sold: 2,
+};
+
+const MOCK_PROPERTY_TYPES: PropertyTypeBreakdown[] = [
+  { type: "rent", count: 4, totalValue: 1200000, averageValue: 300000 },
+  { type: "airbnb", count: 2, totalValue: 850000, averageValue: 425000 },
+  { type: "flip", count: 2, totalValue: 800000, averageValue: 400000 },
+];
+
 const Dashboard = () => {
-  const [kpi, setKpi] = useState<KPIData | null>(null);
-  const [trends, setTrends] = useState<PortfolioTrendPoint[]>([]);
-  const [dealFlow, setDealFlow] = useState<DealFlow | null>(null);
-  const [propertyTypes, setPropertyTypes] = useState<PropertyTypeBreakdown[]>([]);
-
-  const { get: getKPI } = useApi<KPIData>(null);
-  const { get: getTrends } = useApi<PortfolioTrendPoint[]>(null);
-  const { get: getDealFlow } = useApi<DealFlow>(null);
-  const { get: getPropertyTypes } = useApi<PropertyTypeBreakdown[]>(null);
-
-  useEffect(() => {
-    // Set mock data immediately
-    setKpi({
-      portfolioValue: 2850000,
-      portfolioValueChange: 125000,
-      monthlyCashflow: 8500,
-      cashflowChange: 1200,
-      availableEquity: 450000,
-      equityChange: 35000,
-      propertyCount: 8,
-      averageCapRate: 7.25,
-    });
-
-    setTrends([
-      { date: "2025-11-01", value: 2400000 },
-      { date: "2025-12-01", value: 2550000 },
-      { date: "2025-01-01", value: 2650000 },
-      { date: "2025-02-01", value: 2725000 },
-      { date: "2025-03-01", value: 2850000 },
-    ]);
-
-    setDealFlow({
-      lead: 3,
-      analyzing: 2,
-      offer: 1,
-      under_contract: 1,
-      owned: 8,
-      sold: 2,
-    });
-
-    setPropertyTypes([
-      { type: "rent", count: 4, totalValue: 1200000, averageValue: 300000 },
-      { type: "airbnb", count: 2, totalValue: 850000, averageValue: 425000 },
-      { type: "flip", count: 2, totalValue: 800000, averageValue: 400000 },
-    ]);
-
-    // Try to load from API in background
-    const loadFromAPI = async () => {
-      const kpiData = await getKPI("/dashboard/kpi");
-      if (kpiData) setKpi(kpiData);
-
-      const trendData = await getTrends("/dashboard/portfolio-trend");
-      if (trendData) setTrends(trendData);
-
-      const flowData = await getDealFlow("/dashboard/deal-flow");
-      if (flowData) setDealFlow(flowData);
-
-      const typeData = await getPropertyTypes("/dashboard/property-types");
-      if (typeData) setPropertyTypes(typeData);
-    };
-
-    loadFromAPI();
-  }, []);
+  const [kpi, setKpi] = useState<KPIData>(MOCK_KPI);
+  const [trends, setTrends] = useState<PortfolioTrendPoint[]>(MOCK_TRENDS);
+  const [dealFlow, setDealFlow] = useState<DealFlow>(MOCK_DEAL_FLOW);
+  const [propertyTypes, setPropertyTypes] = useState<PropertyTypeBreakdown[]>(MOCK_PROPERTY_TYPES);
 
   const formatCurrency = (value: number) =>
     new Intl.NumberFormat("en-US", {
