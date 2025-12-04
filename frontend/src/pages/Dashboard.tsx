@@ -45,63 +45,58 @@ const Dashboard = () => {
   const { get: getPropertyTypes } = useApi<PropertyTypeBreakdown[]>(null);
 
   useEffect(() => {
-    const loadDashboard = async () => {
-      // Try to load from API
+    // Set mock data immediately
+    setKpi({
+      portfolioValue: 2850000,
+      portfolioValueChange: 125000,
+      monthlyCashflow: 8500,
+      cashflowChange: 1200,
+      availableEquity: 450000,
+      equityChange: 35000,
+      propertyCount: 8,
+      averageCapRate: 7.25,
+    });
+
+    setTrends([
+      { date: "2025-11-01", value: 2400000 },
+      { date: "2025-12-01", value: 2550000 },
+      { date: "2025-01-01", value: 2650000 },
+      { date: "2025-02-01", value: 2725000 },
+      { date: "2025-03-01", value: 2850000 },
+    ]);
+
+    setDealFlow({
+      lead: 3,
+      analyzing: 2,
+      offer: 1,
+      under_contract: 1,
+      owned: 8,
+      sold: 2,
+    });
+
+    setPropertyTypes([
+      { type: "rent", count: 4, totalValue: 1200000, averageValue: 300000 },
+      { type: "airbnb", count: 2, totalValue: 850000, averageValue: 425000 },
+      { type: "flip", count: 2, totalValue: 800000, averageValue: 400000 },
+    ]);
+
+    // Try to load from API in background
+    const loadFromAPI = async () => {
       const kpiData = await getKPI("/dashboard/kpi");
-      const trendData = await getTrends("/dashboard/portfolio-trend");
-      const flowData = await getDealFlow("/dashboard/deal-flow");
-      const typeData = await getPropertyTypes("/dashboard/property-types");
-
-      // Use API data if available, otherwise use mock data
       if (kpiData) setKpi(kpiData);
-      else {
-        setKpi({
-          portfolioValue: 2850000,
-          portfolioValueChange: 125000,
-          monthlyCashflow: 8500,
-          cashflowChange: 1200,
-          availableEquity: 450000,
-          equityChange: 35000,
-          propertyCount: 8,
-          averageCapRate: 7.25,
-        });
-      }
 
+      const trendData = await getTrends("/dashboard/portfolio-trend");
       if (trendData) setTrends(trendData);
-      else {
-        setTrends([
-          { date: "2025-11-01", value: 2400000 },
-          { date: "2025-12-01", value: 2550000 },
-          { date: "2025-01-01", value: 2650000 },
-          { date: "2025-02-01", value: 2725000 },
-          { date: "2025-03-01", value: 2850000 },
-        ]);
-      }
 
+      const flowData = await getDealFlow("/dashboard/deal-flow");
       if (flowData) setDealFlow(flowData);
-      else {
-        setDealFlow({
-          lead: 3,
-          analyzing: 2,
-          offer: 1,
-          under_contract: 1,
-          owned: 8,
-          sold: 2,
-        });
-      }
 
+      const typeData = await getPropertyTypes("/dashboard/property-types");
       if (typeData) setPropertyTypes(typeData);
-      else {
-        setPropertyTypes([
-          { type: "rent", count: 4, totalValue: 1200000, averageValue: 300000 },
-          { type: "airbnb", count: 2, totalValue: 850000, averageValue: 425000 },
-          { type: "flip", count: 2, totalValue: 800000, averageValue: 400000 },
-        ]);
-      }
     };
 
-    loadDashboard();
-  }, [getKPI, getTrends, getDealFlow, getPropertyTypes]);
+    loadFromAPI();
+  }, []);
 
   const formatCurrency = (value: number) =>
     new Intl.NumberFormat("en-US", {
