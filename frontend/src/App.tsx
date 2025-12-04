@@ -10,6 +10,7 @@ import Pipeline from "./pages/Pipeline";
 import MapView from "./pages/MapView";
 import Renovation from "./pages/Renovation";
 import ScenarioAnalysis from "./pages/ScenarioAnalysis";
+import Analysis from "./pages/Analysis";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
@@ -25,6 +26,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/analysis" element={<Analysis />} />
           <Route path="/properties" element={<Properties />} />
           <Route path="/properties/:id" element={<Properties />} />
           <Route path="/pipeline" element={<Pipeline />} />
